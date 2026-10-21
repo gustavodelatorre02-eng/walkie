@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walkie talkie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bench: #b9c2c6;
+    --housing: #2f4550;
+    --housing-edge: #223540;
+    --grille: #1b2b34;
+    --lcd: #c4d4a0;
+    --lcd-ink: #26301a;
+    --amber: #f0a81c;
+    --amber-deep: #c98400;
+    --text: #e8eef0;
+    --muted: #9fb2ba;
+    --font: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bench);
+    font-family: var(--font);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: env(safe-area-inset-top, 0px) 12px env(safe-area-inset-bottom, 0px);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .radio {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background: linear-gradient(180deg, var(--housing) 0%, var(--housing-edge) 100%);
+    border-radius: 34px 34px 44px 44px;
+    padding: 28px 24px 26px;
+    box-shadow: 0 2px 0 #4d6773 inset, 0 26px 40px -18px rgba(20, 32, 38, .55);
+  }
+  .antenna {
+    position: absolute;
+    top: -46px;
+    right: 44px;
+    width: 18px;
+    height: 52px;
+    background: var(--housing-edge);
+    border-radius: 9px 9px 0 0;
+  }
+  .lcd {
+    background: var(--lcd);
+    color: var(--lcd-ink);
+    border-radius: 12px;
+    padding: 12px 16px 14px;
+    box-shadow: 0 3px 8px rgba(20, 30, 10, .35) inset, 0 0 0 4px var(--grille);
+    min-height: 108px;
+  }
+  .lcd .row { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 500; opacity: .8; }
+  .lcd .status { font-size: 34px; line-height: 1.1; font-weight: 700; margin-top: 10px; overflow-wrap: anywhere; }
+  .lcd .status.error { font-size: 18px; line-height: 1.25; font-weight: 600; }
+
+  form, .live { margin-top: 24px; }
+  label { display: block; font-size: 16px; font-weight: 500; color: var(--muted); margin: 0 0 6px; }
+  input {
+    width: 100%;
+    font: 500 20px var(--font);
+    color: var(--text);
+    background: var(--grille);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input::placeholder { color: #62777f; }
+  input:focus-visible { outline: none; border-color: var(--amber); }
+  .hint { font-size: 15px; color: var(--muted); margin: -4px 0 20px; line-height: 1.35; }
+
+  button { font-family: var(--font); cursor: pointer; }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .primary {
+    width: 100%;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2b1c00;
+    background: var(--amber);
+    border: 0;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .primary:active { background: var(--amber-deep); }
+
+  .grille {
+    height: 54px;
+    border-radius: 10px;
+    background: repeating-linear-gradient(90deg, var(--grille) 0 6px, transparent 6px 14px);
+    opacity: .9;
+  }
+  .ptt-wrap { display: flex; flex-direction: column; align-items: center; margin: 26px 0 22px; }
+  .ptt {
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    border: 0;
+    color: #2b1c00;
+    font-size: 24px;
+    font-weight: 700;
+    background: radial-gradient(circle at 50% 35%, #ffc85a 0%, var(--amber) 55%, var(--amber-deep) 100%);
+    box-shadow: 0 0 0 10px var(--grille), 0 12px 0 10px #14212a, 0 14px 22px 10px rgba(0, 0, 0, .35);
+    transform: translateY(0);
+    transition: transform .06s, box-shadow .06s;
+    touch-action: none;
+  }
+  .ptt.on {
+    transform: translateY(8px);
+    box-shadow: 0 0 0 10px var(--grille), 0 4px 0 10px #14212a, 0 0 34px 14px rgba(240, 168, 28, .55);
+  }
+  .ptt.busy { background: #6f8089; color: #1c2a31; box-shadow: 0 0 0 10px var(--grille), 0 12px 0 10px #14212a; }
+
+  .roster { list-style: none; margin: 0 0 18px; padding: 0; font-size: 18px; font-weight: 500; }
+  .roster li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid #3f5864; }
+  .roster li:first-child { border-top: 0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #62777f; flex: none; }
+  .talking .dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .empty { color: var(--muted); font-size: 16px; padding: 4px 0; }
+  .actions { display: flex; gap: 10px; }
+  .secondary {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 2px solid #4d6773;
+    border-radius: 10px;
+    padding: 10px 8px;
+  }
+  .secondary:active { background: var(--grille); }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .ptt { transition: none; } }
+</style>
+</head>
+<body>
+<main class="radio">
+  <div class="antenna" aria-hidden="true"></div>
+
+  <section class="lcd" aria-live="polite">
+    <div class="row"><span id="lcdChannel">No channel</span><span id="lcdCount"></span></div>
+    <div class="status" id="lcdStatus">Pick a channel</div>
+  </section>
+
+  <form id="joinForm" autocomplete="off">
+    <label for="channel">Channel name</label>
+    <input id="channel" maxlength="24" placeholder="family-trip" autocapitalize="off" spellcheck="false" required>
+    <label for="name">Your name</label>
+    <input id="name" maxlength="20" placeholder="Gustavo">
+    <p class="hint">Anyone who enters the same channel name can hear you. Pick something hard to guess.</p>
+    <button class="primary" type="submit">Join channel</button>
+  </form>
+
+  <section class="live" id="live" hidden>
+    <div class="grille" aria-hidden="true"></div>
+    <div class="ptt-wrap">
+      <button class="ptt" id="ptt" type="button" aria-label="Hold to talk">Hold to talk</button>
+    </div>
+    <ul class="roster" id="roster"></ul>
+    <div class="actions">
+      <button class="secondary" id="invite" type="button">Copy invite link</button>
+      <button class="secondary" id="leave" type="button">Leave channel</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const PREFIX = "wtk-";
+
+  let peer = null, stream = null, track = null, audioCtx = null, wakeLock = null;
+  let channel = "", myName = "", hostId = "", isHost = false, live = false;
+  let transmitting = false;
+  const peers = new Map();      // id -> { name, conn, audio }
+  const talking = new Set();    // ids of people currently talking
+
+  // ---------- UI ----------
+  function setLcd(status, opts = {}) {
+    const el = $("lcdStatus");
+    el.textContent = status;
+    el.classList.toggle("error", !!opts.error);
+  }
+  function renderStatus() {
+    if (!live) return;
+    $("lcdChannel").textContent = channel;
+    const n = peers.size;
+    $("lcdCount").textContent = n === 0 ? "Just you" : (n === 1 ? "1 other" : n + " others");
+    const ptt = $("ptt");
+    const someoneTalking = talking.size > 0;
+    if (transmitting) {
+      setLcd("Talking");
+    } else if (someoneTalking) {
+      const names = [...talking].map((id) => (peers.get(id) || {}).name || "Someone");
+      setLcd(names.join(", ") + " talking");
+    } else {
+      setLcd(n === 0 ? "Waiting for others" : "Ready");
+    }
+    ptt.classList.toggle("on", transmitting);
+    const busy = someoneTalking && !transmitting;
+    ptt.classList.toggle("busy", busy);
+    ptt.textContent = busy ? "Channel busy" : (transmitting ? "Talking" : "Hold to talk");
+    renderRoster();
+  }
+  function renderRoster() {
+    const ul = $("roster");
+    ul.replaceChildren();
+    const add = (name, isTalking) => {
+      const li = document.createElement("li");
+      if (isTalking) li.className = "talking";
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      const text = document.createElement("span");
+      text.textContent = name;
+      li.append(dot, text);
+      ul.append(li);
+    };
+    add(myName + " (you)", transmitting);
+    if (peers.size === 0) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Share the invite link so others can join.";
+      ul.append(li);
+    }
+    peers.forEach((p, id) => add(p.name, talking.has(id)));
+  }
+
+  // ---------- Sound ----------
+  function beep(freq = 1100, ms = 90) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.value = 0.08;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + ms / 1000);
+  }
+
+  // ---------- Peers ----------
+  function ensure(id) {
+    if (!peers.has(id)) peers.set(id, { name: "Guest", conn: null, audio: null });
+    return peers.get(id);
+  }
+  function drop(id) {
+    const p = peers.get(id);
+    if (!p) return;
+    if (p.audio) { p.audio.srcObject = null; }
+    peers.delete(id);
+    talking.delete(id);
+    renderStatus();
+  }
+  function broadcast(msg) {
+    peers.forEach((p) => { if (p.conn && p.conn.open) p.conn.send(msg); });
+  }
+  function handle(id, msg) {
+    if (!msg || typeof msg !== "object") return;
+    if (msg.type === "hello") {
+      ensure(id).name = String(msg.name || "Guest").slice(0, 20);
+    } else if (msg.type === "peers" && Array.isArray(msg.list)) {
+      msg.list.forEach((pid) => { if (typeof pid === "string") connectTo(pid); });
+    } else if (msg.type === "tx") {
+      if (msg.on) { talking.add(id); beep(700, 60); } else { talking.delete(id); }
+    }
+    renderStatus();
+  }
+  function setupConn(conn, incoming) {
+    conn.on("open", () => {
+      ensure(conn.peer).conn = conn;
+      conn.send({ type: "hello", name: myName });
+      if (incoming && isHost) {
+        conn.send({ type: "peers", list: [...peers.keys()].filter((id) => id !== conn.peer) });
+      }
+      renderStatus();
+    });
+    conn.on("data", (msg) => handle(conn.peer, msg));
+    conn.on("close", () => drop(conn.peer));
+    conn.on("error", () => {});
+  }
+  function attachCall(call) {
+    call.on("stream", (remote) => {
+      const p = ensure(call.peer);
+      if (!p.audio) {
+        const a = new Audio();
+        a.autoplay = true;
+        a.playsInline = true;
+        a.srcObject = remote;
+        p.audio = a;
+        a.play().catch(() => {});
+      }
+    });
+    call.on("close", () => drop(call.peer));
+    call.on("error", () => {});
+  }
+  function connectTo(id) {
+    if (!peer || id === peer.id || peers.has(id)) return;
+    ensure(id);
+    setupConn(peer.connect(id, { reliable: true }), false);
+    attachCall(peer.call(id, stream));
+  }
+  function wire(p) {
+    p.on("connection", (c) => setupConn(c, true));
+    p.on("call", (call) => { call.answer(stream); attachCall(call); });
+    p.on("disconnected", () => { if (!p.destroyed) p.reconnect(); });
+  }
+  function onPeerError(e) {
+    if (e.type === "peer-unavailable") return;
+    if (live) { setLcd("Connection problem", { error: true }); return; }
+    leave("Can't reach the connection service. Check your internet and try again.");
+  }
+
+  // ---------- Joining ----------
+  function becomeHost() {
+    peer = new Peer(hostId);
+    wire(peer);
+    peer.on("open", () => { isHost = true; goLive(); });
+    peer.on("error", (e) => {
+      if (e.type === "unavailable-id") { peer.destroy(); becomeGuest(); }
+      else onPeerError(e);
+    });
+  }
+  function becomeGuest() {
+    peer = new Peer();
+    wire(peer);
+    peer.on("open", () => { isHost = false; goLive(); connectTo(hostId); });
+    peer.on("error", onPeerError);
+  }
+  function goLive() {
+    live = true;
+    $("joinForm").hidden = true;
+    $("live").hidden = false;
+    history.replaceState(null, "", "#" + channel);
+    if (navigator.wakeLock) navigator.wakeLock.request("screen").then((l) => { wakeLock = l; }).catch(() => {});
+    renderStatus();
+  }
+  async function join(ev) {
+    ev.preventDefault();
+    channel = $("channel").value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 24);
+    if (!channel) { setLcd("Use letters and numbers for the channel name", { error: true }); return; }
+    myName = $("name").value.trim() || "Guest " + Math.floor(10 + Math.random() * 90);
+    hostId = PREFIX + channel;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+    } catch (err) {
+      setLcd("Microphone access is blocked. Allow it in your browser settings, then join again.", { error: true });
+      return;
+    }
+    track = stream.getAudioTracks()[0];
+    track.enabled = false;           // silent until the button is held
+    setLcd("Connecting…");
+    becomeHost();
+  }
+  function leave(message) {
+    stopTalk();
+    live = false; isHost = false;
+    if (peer) { peer.destroy(); peer = null; }
+    peers.forEach((p) => { if (p.audio) p.audio.srcObject = null; });
+    peers.clear(); talking.clear();
+    if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; track = null; }
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+    $("live").hidden = true;
+    $("joinForm").hidden = false;
+    $("lcdChannel").textContent = "No channel";
+    $("lcdCount").textContent = "";
+    if (message) setLcd(message, { error: true }); else setLcd("Pick a channel");
+  }
+
+  // ---------- Push to talk ----------
+  function startTalk() {
+    if (!live || transmitting || talking.size > 0 || !track) return;
+    transmitting = true;
+    track.enabled = true;
+    broadcast({ type: "tx", on: true });
+    renderStatus();
+  }
+  function stopTalk() {
+    if (!transmitting) return;
+    transmitting = false;
+    if (track) track.enabled = false;
+    broadcast({ type: "tx", on: false });
+    beep(1300, 80);
+    renderStatus();
+  }
+
+  const ptt = $("ptt");
+  ptt.addEventListener("pointerdown", (e) => { e.preventDefault(); ptt.setPointerCapture(e.pointerId); startTalk(); });
+  ptt.addEventListener("pointerup", stopTalk);
+  ptt.addEventListener("pointercancel", stopTalk);
+  ptt.addEventListener("lostpointercapture", stopTalk);
+  ptt.addEventListener("contextmenu", (e) => e.preventDefault());
+  window.addEventListener("blur", stopTalk);
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && !e.repeat && live && document.activeElement.tagName !== "INPUT") { e.preventDefault(); startTalk(); }
+  });
+  document.addEventListener("keyup", (e) => { if (e.code === "Space") stopTalk(); });
+
+  // ---------- Wiring ----------
+  $("joinForm").addEventListener("submit", join);
+  $("leave").addEventListener("click", () => { history.replaceState(null, "", location.pathname); leave(); });
+  $("invite").addEventListener("click", async () => {
+    const link = location.href.split("#")[0] + "#" + channel;
+    const btn = $("invite");
+    try { await navigator.clipboard.writeText(link); btn.textContent = "Link copied"; }
+    catch (e) { window.prompt("Copy this invite link:", link); }
+    setTimeout(() => { btn.textContent = "Copy invite link"; }, 1800);
+  });
+  if (location.hash.length > 1) $("channel").value = decodeURIComponent(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>
